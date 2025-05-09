@@ -33,12 +33,12 @@ products = {
     "product_b": {"dimensions": (30, 30, 10), "weight": 1000, "color": "green"},
     "product_c": {"dimensions": (50, 50, 25), "weight": 2000, "color": "blue"},
     "product_d": {"dimensions": (50, 50, 10), "weight": 1500, "color": "pink"},
-    "product_e": {"dimensions": (10, 30, 10), "weight": 100, "color": "orange"},
-    "product_f": {"dimensions": (6, 6, 6), "weight": 10, "color": "purple"},
-    "product_g": {"dimensions": (10, 10, 10), "weight": 1, "color": "white"},
-    "product_h": {"dimensions": (2, 2, 2), "weight": 1, "color": "black"},
-    "product_i": {"dimensions": (6, 6, 6), "weight": 200, "color": "grey"},
-    "product_j": {"dimensions": (30, 30, 15), "weight": 1500, "color": "yellow"},
+    "product_e": {"dimensions": (10, 30, 10), "weight": 100, "color": "blue"},
+    "product_f": {"dimensions": (6, 6, 6), "weight": 10, "color": "green"},
+    "product_g": {"dimensions": (10, 10, 10), "weight": 1, "color": "yellow"},
+    "product_h": {"dimensions": (2, 2, 2), "weight": 1, "color": "blue"},
+    "product_i": {"dimensions": (6, 6, 6), "weight": 200, "color": "pink"},
+    "product_j": {"dimensions": (30, 30, 15), "weight": 1500, "color": "blue"},
 }
 
 # Define orders
