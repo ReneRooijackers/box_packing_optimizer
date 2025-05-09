@@ -33,12 +33,12 @@ products = {
     "product_b": {"dimensions": (30, 30, 10), "weight": 1000, "color": "green"},
     "product_c": {"dimensions": (50, 50, 25), "weight": 2000, "color": "blue"},
     "product_d": {"dimensions": (50, 50, 10), "weight": 1500, "color": "pink"},
-    "product_e": {"dimensions": (10, 30, 10), "weight": 100, "color": "blue"},
-    "product_f": {"dimensions": (6, 6, 6), "weight": 10, "color": "green"},
-    "product_g": {"dimensions": (10, 10, 10), "weight": 1, "color": "yellow"},
-    "product_h": {"dimensions": (2, 2, 2), "weight": 1, "color": "blue"},
-    "product_i": {"dimensions": (6, 6, 6), "weight": 200, "color": "pink"},
-    "product_j": {"dimensions": (30, 30, 15), "weight": 1500, "color": "blue"},
+    "product_e": {"dimensions": (10, 30, 10), "weight": 100, "color": "orange"},
+    "product_f": {"dimensions": (6, 6, 6), "weight": 10, "color": "purple"},
+    "product_g": {"dimensions": (10, 10, 10), "weight": 1, "color": "white"},
+    "product_h": {"dimensions": (2, 2, 2), "weight": 1, "color": "black"},
+    "product_i": {"dimensions": (6, 6, 6), "weight": 200, "color": "grey"},
+    "product_j": {"dimensions": (30, 30, 15), "weight": 1500, "color": "yellow"},
 }
 
 # Define orders
@@ -114,6 +114,13 @@ def visualize_packing(packing_result):
         box = boxes[box_name]
         box_dim = box["dimensions"]
         fig = go.Figure()
+
+        # Initialize position and layout tracking
+        pos_x = pos_y = pos_z = 0
+        row_depth = 0
+        layer_height = 0
+        max_height_used = 0
+
         fig.update_layout(
             title=f"Box {box_index + 1}: {box_name}",
             scene=dict(
@@ -128,17 +135,39 @@ def visualize_packing(packing_result):
             plot_bgcolor="linen"
         )
 
-        offset_x = offset_y = offset_z = 0
-        step = 0
         for item in items:
             prod = products[item]
-            dims = sorted(prod["dimensions"], reverse=True)
+            dims = sorted(prod["dimensions"], reverse=True)  # height, width, length
+            h, w, l = dims
             color = prod.get("color", "lightgrey")
             hover_text = f"<b>{item}</b><br>Dimensions: {prod['dimensions']}<br>Weight: {prod['weight']}g"
+
+            # Check X overflow and wrap Y
+            if pos_x + l > box_dim[2]:
+                pos_x = 0
+                pos_y += row_depth
+                row_depth = 0
+
+            # Check Y overflow and wrap Z
+            if pos_y + w > box_dim[1]:
+                pos_y = 0
+                pos_z += layer_height
+                layer_height = 0
+
+            # If Z overflow, just keep stacking to show everything
+            if pos_z + h > box_dim[0]:
+                pos_x = pos_y = 0
+                pos_z += layer_height
+                layer_height = 0
+
+            # Record how high we stacked
+            max_height_used = max(max_height_used, pos_z + h)
+
+            # Add the item cube
             fig.add_trace(go.Mesh3d(
-                x=[offset_x, offset_x+dims[2], offset_x+dims[2], offset_x, offset_x, offset_x+dims[2], offset_x+dims[2], offset_x],
-                y=[offset_y, offset_y, offset_y+dims[1], offset_y+dims[1], offset_y, offset_y, offset_y+dims[1], offset_y+dims[1]],
-                z=[offset_z, offset_z, offset_z, offset_z, offset_z+dims[0], offset_z+dims[0], offset_z+dims[0], offset_z+dims[0]],
+                x=[pos_x, pos_x+l, pos_x+l, pos_x, pos_x, pos_x+l, pos_x+l, pos_x],
+                y=[pos_y, pos_y, pos_y+w, pos_y+w, pos_y, pos_y, pos_y+w, pos_y+w],
+                z=[pos_z, pos_z, pos_z, pos_z, pos_z+h, pos_z+h, pos_z+h, pos_z+h],
                 i=[0, 0, 0, 1, 1, 2, 2, 3, 4, 5, 6, 7],
                 j=[1, 2, 4, 2, 5, 3, 6, 0, 5, 6, 7, 4],
                 k=[2, 3, 5, 3, 6, 0, 7, 1, 6, 7, 4, 5],
@@ -149,10 +178,21 @@ def visualize_packing(packing_result):
                 name=item,
                 showscale=False
             ))
-            offset_x += dims[2]
-            step += 1
+
+            # Update positions
+            pos_x += l
+            row_depth = max(row_depth, w)
+            layer_height = max(layer_height, h)
+
+        # Adjust Z-axis range to fit overflows
+        fig.update_layout(
+            scene=dict(
+                zaxis=dict(range=[0, max(max_height_used, box_dim[0])])
+            )
+        )
 
         figures.append(fig)
+
     return figures
 
 # Streamlit UI
